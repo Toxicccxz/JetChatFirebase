@@ -18,6 +18,7 @@
 
 package com.example.compose.jetchat.conversation
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.border
@@ -79,12 +80,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.os.bundleOf
 import com.example.compose.jetchat.FunctionalityNotAvailablePopup
 import com.example.compose.jetchat.R
 import com.example.compose.jetchat.components.JetchatAppBar
 import com.example.compose.jetchat.data.exampleUiState
 import com.example.compose.jetchat.theme.JetchatTheme
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 /**
  * Entry point for a conversation screen.
@@ -109,6 +115,7 @@ fun ConversationContent(
     val topBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(topBarState)
     val scope = rememberCoroutineScope()
+    lateinit var firebaseAnalytics: FirebaseAnalytics
 
     Surface(modifier = modifier) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -128,6 +135,13 @@ fun ConversationContent(
                         uiState.addMessage(
                             Message(authorMe, content, timeNow)
                         )
+                        uiState.chatCount++
+                        firebaseAnalytics = Firebase.analytics
+                        firebaseAnalytics.logEvent("CHAT_COUNT", bundleOf(
+                            "chat_count" to "${uiState.chatCount}"
+                        )
+                        )
+                        Log.e("chatcount", "${uiState.chatCount}")
                     },
                     resetScroll = {
                         scope.launch {

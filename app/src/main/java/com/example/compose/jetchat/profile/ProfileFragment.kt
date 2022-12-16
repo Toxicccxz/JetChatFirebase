@@ -17,10 +17,14 @@
 package com.example.compose.jetchat.profile
 
 import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,16 +44,21 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import com.example.compose.jetchat.FunctionalityNotAvailablePopup
 import com.example.compose.jetchat.MainViewModel
+import com.example.compose.jetchat.NavActivity
 import com.example.compose.jetchat.R
 import com.example.compose.jetchat.components.JetchatAppBar
 import com.example.compose.jetchat.theme.JetchatTheme
+import java.time.LocalDateTime
 
 class ProfileFragment : Fragment() {
+
+    var TAG:String? = null
 
     private val viewModel: ProfileViewModel by viewModels()
     private val activityViewModel: MainViewModel by activityViewModels()
@@ -61,6 +70,7 @@ class ProfileFragment : Fragment() {
         viewModel.setUserId(userId)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3Api::class)
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -70,6 +80,9 @@ class ProfileFragment : Fragment() {
         val rootView: View = inflater.inflate(R.layout.fragment_profile, container, false)
 
         rootView.findViewById<ComposeView>(R.id.toolbar_compose_view).apply {
+            var openConversationTime:Long = SystemClock.elapsedRealtime()
+            var current:
+                    LocalDateTime? = LocalDateTime.now()
             setContent {
                 var functionalityNotAvailablePopupShown by remember { mutableStateOf(false) }
                 if (functionalityNotAvailablePopupShown) {
@@ -78,7 +91,13 @@ class ProfileFragment : Fragment() {
 
                 JetchatTheme {
                     JetchatAppBar(
-                        onNavIconPressed = { activityViewModel.openDrawer() },
+                        onNavIconPressed = {
+                            activityViewModel.openDrawer()
+                            var conversationCloseTime = SystemClock.elapsedRealtime()
+                            var stayTime = conversationCloseTime - openConversationTime
+                            (activity as NavActivity).firebaseAnalytics.logEvent("PROFILE_PAGE", bundleOf(
+                                "stay_time_is" to "from $current to ${LocalDateTime.now()}, $stayTime milliseconds total"
+                            )) },
                         title = { },
                         actions = {
                             // More icon
@@ -103,6 +122,8 @@ class ProfileFragment : Fragment() {
             setContent {
                 val userData by viewModel.userData.observeAsState()
                 val nestedScrollInteropConnection = rememberNestedScrollInteropConnection()
+                TAG = userData?.name
+                Log.e("xavier", "ok now im in $TAG\'s profile")
 
                 JetchatTheme {
                     if (userData == null) {
@@ -117,5 +138,11 @@ class ProfileFragment : Fragment() {
             }
         }
         return rootView
+    }
+
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        Log.e("xavier", "ok now i leave $TAG\'s profile")
     }
 }

@@ -23,6 +23,7 @@ import com.example.compose.jetchat.R
 class ConversationUiState(
     val channelName: String,
     val channelMembers: Int,
+    var chatCount: Int = 0,
     initialMessages: List<Message>
 ) {
     private val _messages: MutableList<Message> = initialMessages.toMutableStateList()

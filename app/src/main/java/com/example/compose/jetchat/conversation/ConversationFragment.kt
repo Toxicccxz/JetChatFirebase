@@ -16,12 +16,16 @@
 
 package com.example.compose.jetchat.conversation
 
+import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.navigationBars
@@ -35,20 +39,26 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.findNavController
 import com.example.compose.jetchat.MainViewModel
+import com.example.compose.jetchat.NavActivity
 import com.example.compose.jetchat.R
 import com.example.compose.jetchat.data.exampleUiState
 import com.example.compose.jetchat.theme.JetchatTheme
+import java.time.LocalDateTime
 
 class ConversationFragment : Fragment() {
 
     private val activityViewModel: MainViewModel by activityViewModels()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View = ComposeView(inflater.context).apply {
         layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+        var openConversationTime:Long = SystemClock.elapsedRealtime()
+        var current:
+                LocalDateTime? = LocalDateTime.now()
 
         setContent {
             CompositionLocalProvider(
@@ -60,6 +70,14 @@ class ConversationFragment : Fragment() {
                         navigateToProfile = { user ->
                             // Click callback
                             val bundle = bundleOf("userId" to user)
+                            var conversationCloseTime = SystemClock.elapsedRealtime()
+                            var stayTime = conversationCloseTime - openConversationTime
+                            (activity as NavActivity).firebaseAnalytics.logEvent("CONVERSATION_PAGE", bundleOf(
+                                "stay_time_is" to "from $current to ${LocalDateTime.now()}, $stayTime milliseconds total"
+                            ))
+                            (activity as NavActivity).firebaseAnalytics.logEvent("MESSAGE_COUNT", bundleOf(
+                                "message_count" to "${(activity as NavActivity).messageCount} total"
+                            ))
                             findNavController().navigate(
                                 R.id.nav_profile,
                                 bundle
@@ -67,6 +85,14 @@ class ConversationFragment : Fragment() {
                         },
                         onNavIconPressed = {
                             activityViewModel.openDrawer()
+                            var conversationCloseTime = SystemClock.elapsedRealtime()
+                            var stayTime = conversationCloseTime - openConversationTime
+                            (activity as NavActivity).firebaseAnalytics.logEvent("CONVERSATION_PAGE", bundleOf(
+                                "stay_time_is" to "from $current to ${LocalDateTime.now()}, $stayTime milliseconds total"
+                            ))
+                            (activity as NavActivity).firebaseAnalytics.logEvent("MESSAGE_COUNT", bundleOf(
+                                "message_count" to "${(activity as NavActivity).messageCount} total"
+                            ))
                         },
                         // Add padding so that we are inset from any navigation bars
                         modifier = Modifier.windowInsetsPadding(
@@ -78,5 +104,12 @@ class ConversationFragment : Fragment() {
                 }
             }
         }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        (activity as NavActivity).firebaseAnalytics.logEvent("MESSAGE_COUNT", bundleOf(
+            "message_count" to "${(activity as NavActivity).messageCount} total"
+        ))
     }
 }

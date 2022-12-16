@@ -17,6 +17,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -80,6 +81,10 @@ android {
 
 dependencies {
     val composeBom = platform(libs.androidx.compose.bom)
+
+    implementation (platform("com.google.firebase:firebase-bom:31.1.1"))
+    implementation ("com.google.firebase:firebase-analytics-ktx")
+    implementation ("com.blankj:utilcodex:1.31.1")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 

@@ -39,6 +39,7 @@ subprojects {
 plugins {
     id("com.github.ben-manes.versions") version "0.43.0"
     id("nl.littlerobots.version-catalog-update") version "0.7.0"
+    id("com.google.gms.google-services") version "4.3.13"
 }
 
 apply("${project.rootDir}/buildscripts/toml-updater-config.gradle")

@@ -16,23 +16,43 @@
 
 package com.example.compose.jetchat
 
+import android.content.Context
+import android.content.SharedPreferences
+import android.os.Build
+import android.os.SystemClock
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.LocalDateTime
 
 /**
  * Used to communicate between screens.
  */
 class MainViewModel : ViewModel() {
 
+    var drawerOpenTime:Long = 0
+    var current:
+            LocalDateTime? = null
+    var chatSum:Int = 0
+
     private val _drawerShouldBeOpened = MutableStateFlow(false)
     val drawerShouldBeOpened = _drawerShouldBeOpened.asStateFlow()
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun openDrawer() {
         _drawerShouldBeOpened.value = true
+        drawerOpenTime = SystemClock.elapsedRealtime()
+        current = LocalDateTime.now()
     }
 
     fun resetOpenDrawerAction() {
         _drawerShouldBeOpened.value = false
+    }
+
+    fun chatCount() {
+        chatSum++
+        Log.e("chat1", "$chatSum")
     }
 }
